@@ -29,10 +29,8 @@ public class ReservaService {
 	 * @throws EntityNotFoundException Se o livro associado à reserva não for encontrado.
 	 */
 	public Reserva cadastrarReserva(Reserva reserva) {
-		// Verifica se o livro associado à reserva existe.
 	    Livro livro = livroRepository.findById(reserva.getLivro().getId())
 	        .orElseThrow(() -> new EntityNotFoundException("Livro com ID " + reserva.getLivro().getId() + " não encontrado"));
-	    // Associa o livro à reserva.
 	    reserva.setLivro(livro);
 	    return reservaRepository.save(reserva);
 	}
@@ -64,12 +62,10 @@ public class ReservaService {
 	 * @return A reserva atualizada, ou null se a reserva não for encontrada.
 	 * @throws EntityNotFoundException Se o livro associado à reserva atualizada não for encontrado.
 	 */
-	public Reserva AtaulizarReserva(Integer id, Reserva reservaAtualizada) {
+	public Reserva AtualizarReserva(Integer id, Reserva reservaAtualizada) {
 		Reserva reserva = reservaRepository.findById(id).orElse(null);
 		if (reserva != null) {
-			// Verifica se o livro associado à reserva atualizada existe.
 			Livro livro = livroRepository.findById(reservaAtualizada.getLivro().getId()).orElseThrow(() -> new EntityNotFoundException("Livro não encontrado"));
-			// Atualiza os campos da reserva existente.
 			reserva.setReservadoPor(reservaAtualizada.getReservadoPor());
 			reserva.setDataReserva(reservaAtualizada.getDataReserva());
 			reserva.setLivro(livro);

@@ -54,7 +54,6 @@ public class LivroService {
 	public Livro atualizarLivro(Integer id, Livro livroAtualizado) {
 		Livro livro = livroRepository.findById(id).orElse(null);
 		if (livro != null) {
-			// Atualiza os campos do livro existente com os valores do livro atualizado.
 			livro.setTitulo(livroAtualizado.getTitulo());
 			livro.setAutor(livroAtualizado.getAutor());
 			livro.setDisponivel(livroAtualizado.isDisponivel());

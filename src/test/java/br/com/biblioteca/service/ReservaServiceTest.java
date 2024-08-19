@@ -1,3 +1,4 @@
+
 package br.com.biblioteca.service;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -20,26 +21,30 @@ import org.mockito.MockitoAnnotations;
 
 import br.com.biblioteca.entity.Livro;
 import br.com.biblioteca.entity.Reserva;
+import br.com.biblioteca.repository.LivroRepository;
 import br.com.biblioteca.repository.ReservaRepository;
 
 class ReservaServiceTest {
 
 	@Mock
-	private ReservaRepository reservaRepository; // Mock do repositório de reservas.
+	private ReservaRepository reservaRepository;
+
+	@Mock
+	private LivroRepository livroRepository;
 
 	@InjectMocks
-	private ReservaService reservaService; // Serviço a ser testado.
+	private ReservaService reservaService;
 
-	private Reserva reserva; // Objeto de reserva para testes.
-	private Livro livro; // Objeto de livro associado às reservas.
+	private Reserva reserva;
+	private Livro livro;
 
 	/**
-	 * Configura o ambiente de teste antes de cada método de teste.
-	 * Inicializa os objetos e mocks necessários.
+	 * Configura o ambiente de teste antes de cada método de teste. Inicializa os
+	 * objetos e mocks necessários.
 	 */
 	@BeforeEach
 	void setUp() {
-		MockitoAnnotations.openMocks(this); // Inicializa os mocks
+		MockitoAnnotations.openMocks(this);
 		livro = new Livro();
 		livro.setId(1);
 		livro.setTitulo("Livro de Teste");
@@ -57,14 +62,16 @@ class ReservaServiceTest {
 	 */
 	@Test
 	public void testCadastrarReserva() {
-		// Define o comportamento esperado do mock.
-		when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);		
-		// Executa o método a ser testado.
-		Reserva reservaCadastrada = reservaService.cadastrarReserva(reserva);		
-		// Verifica se a reserva foi cadastrada corretamente.
+		when(livroRepository.findById(livro.getId())).thenReturn(Optional.of(livro));
+		when(reservaRepository.save(any(Reserva.class))).thenReturn(reserva);
+		
+		Reserva reservaCadastrada = reservaService.cadastrarReserva(reserva);
+		
 		assertNotNull(reservaCadastrada);
-		assertEquals("Usuário Teste", reservaCadastrada.getReservadoPor());		
-		// Verifica se o método save do repositório foi chamado uma vez.
+		assertEquals("Usuário Teste", reservaCadastrada.getReservadoPor());
+		assertEquals(livro, reservaCadastrada.getLivro());
+		
+		verify(livroRepository, times(1)).findById(livro.getId());
 		verify(reservaRepository, times(1)).save(reserva);
 	}
 
@@ -74,13 +81,13 @@ class ReservaServiceTest {
 	@Test
 	public void testListarReservas() {
 		List<Reserva> reservas = Arrays.asList(reserva);
-		// Define o comportamento esperado do mock.
-		when(reservaRepository.findAll()).thenReturn(reservas);		
-		// Executa o método a ser testado.
-		List<Reserva> listaReservas = reservaService.listarReservas();		
-		// Verifica se a lista retornada contém o número correto de reservas.
-		assertEquals(1, listaReservas.size());		
-		// Verifica se o método findAll do repositório foi chamado uma vez.
+		
+		when(reservaRepository.findAll()).thenReturn(reservas);
+		
+		List<Reserva> listaReservas = reservaService.listarReservas();
+		
+		assertEquals(1, listaReservas.size());
+		
 		verify(reservaRepository, times(1)).findAll();
 	}
 
@@ -89,14 +96,13 @@ class ReservaServiceTest {
 	 */
 	@Test
 	public void testObterReservaPorId() {
-		// Define o comportamento esperado do mock.
-		when(reservaRepository.findById(1)).thenReturn(Optional.of(reserva));	
-		// Executa o método a ser testado.
-		Optional<Reserva> reservaEncontrada = reservaService.obterReservaPorId(1);		
-		// Verifica se a reserva foi encontrada e contém os dados esperados.
+		when(reservaRepository.findById(1)).thenReturn(Optional.of(reserva));
+		
+		Optional<Reserva> reservaEncontrada = reservaService.obterReservaPorId(1);
+		
 		assertTrue(reservaEncontrada.isPresent());
-		assertEquals("Usuário Teste", reservaEncontrada.get().getReservadoPor());		
-		// Verifica se o método findById do repositório foi chamado uma vez.
+		assertEquals("Usuário Teste", reservaEncontrada.get().getReservadoPor());
+		
 		verify(reservaRepository, times(1)).findById(1);
 	}
 
@@ -108,17 +114,20 @@ class ReservaServiceTest {
 		Reserva reservaAtualizada = new Reserva();
 		reservaAtualizada.setLivro(livro);
 		reservaAtualizada.setReservadoPor("Usuário Atualizado");
-		reservaAtualizada.setDataReserva(LocalDate.now().plusDays(1));	
-		// Define o comportamento esperado dos mocks.
+		reservaAtualizada.setDataReserva(LocalDate.now().plusDays(1));
+		
 		when(reservaRepository.findById(1)).thenReturn(Optional.of(reserva));
-		when(reservaRepository.save(any(Reserva.class))).thenReturn(reservaAtualizada);		
-		// Executa o método a ser testado.
-		Reserva reservaSalva = reservaService.AtaulizarReserva(1, reservaAtualizada);		
-		// Verifica se a reserva foi atualizada corretamente.
+		when(livroRepository.findById(livro.getId())).thenReturn(Optional.of(livro));
+		when(reservaRepository.save(any(Reserva.class))).thenReturn(reservaAtualizada);
+		
+		Reserva reservaSalva = reservaService.AtualizarReserva(1, reservaAtualizada);
+		
 		assertNotNull(reservaSalva);
-		assertEquals("Usuário Atualizado", reservaSalva.getReservadoPor());		
-		// Verifica se os métodos findById e save do repositório foram chamados corretamente.
+		assertEquals("Usuário Atualizado", reservaSalva.getReservadoPor());
+		assertEquals(livro, reservaSalva.getLivro());
+		
 		verify(reservaRepository, times(1)).findById(1);
+		verify(livroRepository, times(1)).findById(livro.getId());
 		verify(reservaRepository, times(1)).save(reserva);
 	}
 
@@ -127,11 +136,10 @@ class ReservaServiceTest {
 	 */
 	@Test
 	public void testDeletarReserva() {
-		// Define o comportamento esperado do mock.
-		doNothing().when(reservaRepository).deleteById(1);		
-		// Executa o método a ser testado.
-		reservaService.deletarReserva(1);		
-		// Verifica se o método deleteById do repositório foi chamado uma vez.
+		doNothing().when(reservaRepository).deleteById(1);
+		
+		reservaService.deletarReserva(1);
+		
 		verify(reservaRepository, times(1)).deleteById(1);
 	}
 
