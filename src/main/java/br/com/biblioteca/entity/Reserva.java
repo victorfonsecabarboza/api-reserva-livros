@@ -13,6 +13,7 @@ import lombok.Data;
 @Entity
 @Data
 public class Reserva {
+	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
