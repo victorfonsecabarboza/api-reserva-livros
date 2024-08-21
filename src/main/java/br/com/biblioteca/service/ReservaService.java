@@ -31,6 +31,9 @@ public class ReservaService {
 	public Reserva cadastrarReserva(Reserva reserva) {
 	    Livro livro = livroRepository.findById(reserva.getLivro().getId())
 	        .orElseThrow(() -> new EntityNotFoundException("Livro com ID " + reserva.getLivro().getId() + " não encontrado"));
+	    livro.setDisponivel(false);
+	    livro.setReservado(true);
+	    livroRepository.save(livro);
 	    reserva.setLivro(livro);
 	    return reservaRepository.save(reserva);
 	}
@@ -63,15 +66,31 @@ public class ReservaService {
 	 * @throws EntityNotFoundException Se o livro associado à reserva atualizada não for encontrado.
 	 */
 	public Reserva AtualizarReserva(Integer id, Reserva reservaAtualizada) {
-		Reserva reserva = reservaRepository.findById(id).orElse(null);
-		if (reserva != null) {
-			Livro livro = livroRepository.findById(reservaAtualizada.getLivro().getId()).orElseThrow(() -> new EntityNotFoundException("Livro não encontrado"));
-			reserva.setReservadoPor(reservaAtualizada.getReservadoPor());
-			reserva.setDataReserva(reservaAtualizada.getDataReserva());
-			reserva.setLivro(livro);
-			return reservaRepository.save(reserva);
-		}
-		return null;
+	    Reserva reserva = reservaRepository.findById(id).orElse(null);
+	    if (reserva != null) {
+	        Livro livroAtual = reserva.getLivro();
+	        Livro novoLivro = livroRepository.findById(reservaAtualizada.getLivro().getId())
+	            .orElseThrow(() -> new EntityNotFoundException("Livro com ID " + reservaAtualizada.getLivro().getId() + " não encontrado"));
+	        
+	        // Se o livro associado à reserva for alterado, atualiza o status do livro
+	        if (!livroAtual.equals(novoLivro)) {
+	            // Livro atual é informado como disponível e não reservado
+	            livroAtual.setDisponivel(true);
+	            livroAtual.setReservado(false);
+	            livroRepository.save(livroAtual);
+	            
+	            // Novo livro é marcado como não disponível e reservado
+	            novoLivro.setDisponivel(false);
+	            novoLivro.setReservado(true);
+	            livroRepository.save(novoLivro);
+	        }
+	        reserva.setReservadoPor(reservaAtualizada.getReservadoPor());
+	        reserva.setDataReserva(reservaAtualizada.getDataReserva());
+	        reserva.setLivro(novoLivro);
+	        
+	        return reservaRepository.save(reserva);
+	    }
+	    return null;
 	}
 
 	/**
